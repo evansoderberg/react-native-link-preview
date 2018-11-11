@@ -9,6 +9,19 @@ require("es6-promise").polyfill();
 
 const CONSTANTS = require("./constants");
 
+exports.getLinkInText = function(text) {
+  var detectedUrl = null;
+  text
+    .replace(/\n/g, " ")
+    .split(" ")
+    .forEach(function(token) {
+      if (CONSTANTS.REGEX_VALID_URL.test(token) && !detectedUrl) {
+        detectedUrl = token;
+      }
+    });
+  return detectedUrl;
+};
+
 exports.getPreview = function(text, options) {
   return new Promise(function(resolve, reject) {
     if (!text) {
