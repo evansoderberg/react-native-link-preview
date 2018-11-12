@@ -7,7 +7,9 @@ const urlObj = require("url");
 const fetch = require("cross-fetch").fetch;
 require("es6-promise").polyfill();
 
-export const CONSTANTS = require("./constants");
+const CONSTANTS = require("./constants");
+
+exports.CONSTANTS = CONSTANTS;
 
 exports.getFirstLinkInText = function(text) {
   var detectedUrl = null;
