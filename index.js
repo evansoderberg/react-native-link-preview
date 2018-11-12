@@ -9,7 +9,7 @@ require("es6-promise").polyfill();
 
 const CONSTANTS = require("./constants");
 
-exports.getLinkInText = function(text) {
+exports.getFirstLinkInText = function(text) {
   var detectedUrl = null;
   text
     .replace(/\n/g, " ")
@@ -20,6 +20,19 @@ exports.getLinkInText = function(text) {
       }
     });
   return detectedUrl;
+};
+
+exports.getAllLinksInText = function (text) {
+  var detectedUrls = [];
+  text
+    .replace(/\n/g, " ")
+    .split(" ")
+    .forEach(function (token) {
+      if (CONSTANTS.REGEX_VALID_URL.test(token)) {
+        detectedUrls.push(token);
+      }
+    });
+  return detectedUrls;
 };
 
 exports.getPreview = function(text, options) {
