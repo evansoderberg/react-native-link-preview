@@ -7,7 +7,7 @@ const urlObj = require("url");
 const fetch = require("cross-fetch").fetch;
 require("es6-promise").polyfill();
 
-const CONSTANTS = require("./constants");
+export const CONSTANTS = require("./constants");
 
 exports.getFirstLinkInText = function(text) {
   var detectedUrl = null;
@@ -22,12 +22,12 @@ exports.getFirstLinkInText = function(text) {
   return detectedUrl;
 };
 
-exports.getAllLinksInText = function (text) {
+exports.getAllLinksInText = function(text) {
   var detectedUrls = [];
   text
     .replace(/\n/g, " ")
     .split(" ")
-    .forEach(function (token) {
+    .forEach(function(token) {
       if (CONSTANTS.REGEX_VALID_URL.test(token)) {
         detectedUrls.push(token);
       }
