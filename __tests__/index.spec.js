@@ -1,11 +1,10 @@
 const LinkPreview = require('../index.js');
 const expect = require('expect.js');
 
-global.fetch = require('node-fetch');
-
 describe('link preview', () => {
   it('should extract link info from just URL', async () => {
     const linkInfo = await LinkPreview.getPreview('https://www.youtube.com/watch?v=wuClZjOdT30');
+
     // { url: 'https://www.youtube.com/watch?v=wuClZjOdT30',
     //   title: 'Geography Now! Germany - YouTube',
     //   description: 'Gluten free vegetarians beware. Watch at your own risk. We now have a Public mailbox! Feel free to send anything via mail! Our public mailbox address is: 190...',
@@ -14,6 +13,7 @@ describe('link preview', () => {
     //   videos: undefined }
 
     expect(linkInfo.url).to.be.equal('https://www.youtube.com/watch?v=wuClZjOdT30');
+    expect(linkInfo.siteName).to.be.equal('YouTube');
     expect(linkInfo.title).to.be.equal('Geography Now! Germany');
     expect(linkInfo.description).to.be.ok();
     expect(linkInfo.mediaType).to.be.equal('video.other');
@@ -37,6 +37,7 @@ describe('link preview', () => {
 
     expect(linkInfo.url).to.be.equal('https://www.youtube.com/watch?v=wuClZjOdT30');
     expect(linkInfo.title).to.be.equal('Geography Now! Germany');
+    expect(linkInfo.siteName).to.be.ok();
     expect(linkInfo.description).to.be.ok();
     expect(linkInfo.mediaType).to.be.equal('video.other');
     expect(linkInfo.images.length).to.be.equal(1);
@@ -57,6 +58,7 @@ describe('link preview', () => {
 
     expect(linkInfo.url).to.be.equal('https://www.youtube.com/watch?v=wuClZjOdT30');
     expect(linkInfo.title).to.be.equal('Geography Now! Germany');
+    expect(linkInfo.siteName).to.be.equal('YouTube');
     expect(linkInfo.description).to.be.ok();
     expect(linkInfo.mediaType).to.be.equal('video.other');
     expect(linkInfo.images.length).to.be.equal(1);
@@ -64,6 +66,14 @@ describe('link preview', () => {
     expect(linkInfo.videos.length).to.be.equal(0);
     expect(linkInfo.favicons[0]).to.be.equal('https://www.youtube.com/yts/img/favicon_32-vflOogEID.png');
     expect(linkInfo.contentType.toLowerCase()).to.be.equal('text/html; charset=utf-8');
+  });
+
+  it('should make request with different languages', async () => {
+    let linkInfo = await LinkPreview.getPreview('https://www.hsbc.ca/', {language: 'fr'});
+    expect(linkInfo.title).to.be.equal('Particuliers | HSBC Canada');
+
+    linkInfo = await LinkPreview.getPreview('https://www.hsbc.ca/');
+    expect(linkInfo.title).to.be.equal('HSBC Personal Banking | HSBC Canada');
   });
 
   it('should handle audio urls', async () => {
@@ -137,4 +147,12 @@ describe('link preview', () => {
       expect(e.error).to.be('React-Native-Link-Preview did not find a link in the text');
     }
   });
+
+  it('hould handle empty strings gracefully', async () => {
+    try {
+      await LinkPreview.getPreview('');
+    } catch (e) {
+      expect(e.error).to.be('React-Native-Link-Preview did not receive either a url or text');
+    }
+  })
 });

@@ -1,7 +1,3 @@
-/**
- * @providesModule react-native-link-preview
- */
-
 const cheerio = require("cheerio-without-node-native");
 const urlObj = require("url");
 const fetch = require("cross-fetch").fetch;
@@ -57,7 +53,13 @@ exports.getPreview = function(text, options) {
       });
 
     if (detectedUrl) {
-      fetch(detectedUrl)
+      var fetchOptions = {};
+      if (options && options.language) {
+        fetchOptions.headers = {
+          "Accept-Language": options.language
+        };
+      }
+      fetch(detectedUrl, fetchOptions)
         .then(function(response) {
           // get final URL (after any redirects)
           const finalUrl = response.url;
@@ -79,23 +81,23 @@ exports.getPreview = function(text, options) {
             contentType &&
             CONSTANTS.REGEX_CONTENT_TYPE_IMAGE.test(contentType)
           ) {
-            resolve(parseImageResponse(finalUrl, contentType));
+            return resolve(parseImageResponse(finalUrl, contentType));
           } else if (
             contentType &&
             CONSTANTS.REGEX_CONTENT_TYPE_AUDIO.test(contentType)
           ) {
-            resolve(parseAudioResponse(finalUrl, contentType));
+            return resolve(parseAudioResponse(finalUrl, contentType));
           } else if (
             contentType &&
             CONSTANTS.REGEX_CONTENT_TYPE_VIDEO.test(contentType)
           ) {
-            resolve(parseVideoResponse(finalUrl, contentType));
+            return resolve(parseVideoResponse(finalUrl, contentType));
           } else if (
             contentType &&
             CONSTANTS.REGEX_CONTENT_TYPE_TEXT.test(contentType)
           ) {
             response.text().then(function(text) {
-              resolve(
+              return resolve(
                 parseTextResponse(text, finalUrl, options || {}, contentType)
               );
             });
@@ -103,39 +105,22 @@ exports.getPreview = function(text, options) {
             contentType &&
             CONSTANTS.REGEX_CONTENT_TYPE_APPLICATION.test(contentType)
           ) {
-            resolve(parseApplicationResponse(finalUrl, contentType));
+            return resolve(parseApplicationResponse(finalUrl, contentType));
           } else {
-            console.warn(
-              "React-Native-Link-Preview: Unknown content type for URL."
-            );
+            return reject({
+              error: "React-Native-Link-Preview: Unknown content type for URL."
+            });
           }
         })
         .catch(function(error) {
-          console.warn(error);
+          reject({ error: error });
         });
     } else {
-      console.warn("React-Native-Link-Preview did not find a link in the text");
+      return reject({
+        error: "React-Native-Link-Preview did not find a link in the text"
+      });
     }
   });
-};
-
-// recursively search through object to find property with given id
-// returns value if found, undefined if not found
-const findById = function(object, key) {
-  var value;
-
-  Object.keys(object).some(function(k) {
-    if (k.toLowerCase() === key) {
-      value = object[k];
-      return true;
-    }
-    if (object[k] && typeof object[k] === "object") {
-      value = findById(object[k], key);
-      return value !== undefined;
-    }
-    return false;
-  });
-  return value;
 };
 
 const parseImageResponse = function(url, contentType) {
@@ -180,6 +165,7 @@ const parseTextResponse = function(body, url, options, contentType) {
   return {
     url: url,
     title: getTitle(doc),
+    siteName: getSiteName(doc),
     description: getDescription(doc),
     mediaType: getMediaType(doc) || "website",
     contentType: contentType,
@@ -197,6 +183,12 @@ const getTitle = function(doc) {
   }
 
   return title;
+};
+
+const getSiteName = function(doc) {
+  var siteName = doc("meta[property='og:site_name']").attr("content");
+
+  return siteName;
 };
 
 const getDescription = function(doc) {
@@ -307,9 +299,9 @@ const getVideos = function(doc) {
         secureUrl: videoSecureUrl,
         type: videoType,
         width: width,
-        height: width
+        height: height
       };
-      if (videoType.indexOf("video/") === 0) {
+      if (videoType && videoType.indexOf("video/") === 0) {
         videos.splice(0, 0, videoObj);
       } else {
         videos.push(videoObj);
